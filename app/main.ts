@@ -1,5 +1,7 @@
 import { createInterface } from "readline";
-import { executeInput } from "./utils";
+import { execSync } from "child_process";
+import { parseInput, findExecutableInPath } from "./utils";
+import builtins from "./builtins";
 
 const PROMPT_PREFIX = "$ ";
 
@@ -9,12 +11,27 @@ const rl = createInterface({
   output: process.stdout,
 });
 
-const main = () => {
-  // Start prompt
-  rl.question(PROMPT_PREFIX, (answer) => {
-    executeInput(answer);
-    main();
+const repl = function () {
+  rl.question(PROMPT_PREFIX, (fullCommand) => {
+    const { command, args } = parseInput(fullCommand);
+    if (!command) {
+      // No input
+      repl();
+      return;
+    }
+    const builtinCommand = builtins[command];
+    if (builtinCommand) {
+      // Built-in command
+      builtinCommand(args);
+    } else if (findExecutableInPath(command)) {
+      // External command
+      execSync(fullCommand, { stdio: "inherit" });
+    } else {
+      // Command not found
+      console.log(`${command}: command not found`);
+    }
+    repl();
   });
 };
 
-main();
+repl();
