@@ -58,6 +58,9 @@ class CommandParser {
         if (escapableCharacters.includes(escapedChar)) {
           value += escapedChar;
           i++;
+        } else {
+          // If character is not escapable, print the backslash
+          value += char;
         }
       } else if (char === quoteChar) {
         // Found closing quote, Omit it from the result and return
