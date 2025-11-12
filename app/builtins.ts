@@ -5,12 +5,13 @@ type BuiltinCommand = (args: string[]) => void;
 
 /**
  * Changes the current working directory
- *
- * @param {string[]} args
  */
 function cd(args: string[]): void {
+  const HOME_DIR = "~";
+  const defaultDir = process.env.HOME || path.delimiter;
   // cd to arg, home directory, or root
-  const dir = args[0] || process.env.HOME || path.delimiter;
+  var dir = args[0] || defaultDir;
+  if (dir === HOME_DIR) dir = defaultDir;
   try {
     process.chdir(dir);
   } catch (err: any) {
@@ -20,8 +21,6 @@ function cd(args: string[]): void {
 
 /**
  * Writes arguments to standard output
- *
- * @param {string[]} args
  */
 function echo(args: string[]): void {
   console.log(args.join(" "));
@@ -29,8 +28,6 @@ function echo(args: string[]): void {
 
 /**
  * Exits the shell with the given exit code
- *
- * @param {string[]} args
  */
 function exit(args: string[]): void {
   const exitCode = args.length > 0 ? parseInt(args[0], 10) : 0;
@@ -39,8 +36,6 @@ function exit(args: string[]): void {
 
 /**
  * Prints the current working directory
- *
- * @param {string[]} args
  */
 function pwd(args: string[]): void {
   console.log(process.cwd());
@@ -48,8 +43,6 @@ function pwd(args: string[]): void {
 
 /**
  * Displays whether a command is a shell builtin or an external executable
- *
- * @param {string[]} args
  */
 function type(args: string[]): void {
   const command = args[0];
