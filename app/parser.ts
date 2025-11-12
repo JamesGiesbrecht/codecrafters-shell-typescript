@@ -11,8 +11,11 @@ class CommandParser {
     // Handle one character at a time
     for (let i = 0; i < input.length; i++) {
       const char = input[i];
-      if (this._isWhitespace(char)) {
-        // If there is whitespace stop and add it to the array
+      if (this._isEscape(char)) {
+        // If the escape character is encountered, force the next character onto the array
+        current += input[++i];
+      } else if (this._isWhitespace(char)) {
+        // If there is whitespace stop and push current onto the array
         if (current.length > 0) {
           // Ignore duplicated whitespaces (current having no value)
           tokens.push(current);
@@ -65,6 +68,10 @@ class CommandParser {
 
   private _isWhitespace(char: string): boolean {
     return /\s/.test(char);
+  }
+
+  private _isEscape(char: string): boolean {
+    return char === "\\";
   }
 }
 
