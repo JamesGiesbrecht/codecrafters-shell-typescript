@@ -6,7 +6,7 @@ import builtins from "./builtins";
 const PROMPT_PREFIX = "$ ";
 
 // Create interface
-const rl = createInterface({
+export const rl = createInterface({
   input: process.stdin,
   output: process.stdout,
 });
