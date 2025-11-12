@@ -10,12 +10,11 @@
       "name": "Debug Shell",
       "program": "${workspaceFolder}/app/main.ts",
       "runtimeExecutable": "bun",
-      "args": [],
+      "runtimeArgs": [
+        "--watch"
+      ],
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "env": {
-        "PATH": "${env:PATH}"
-      }
+      "console": "integratedTerminal"
     }
   ]
 }

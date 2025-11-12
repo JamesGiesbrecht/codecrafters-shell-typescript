@@ -1,6 +1,22 @@
+import path from "path";
 import { findExecutableInPath } from "./utils";
 
 type BuiltinCommand = (args: string[]) => void;
+
+/**
+ * Changes the current working directory
+ *
+ * @param {string[]} args
+ */
+function cd(args: string[]): void {
+  // cd to arg, home directory, or root
+  const dir = args[0] || process.env.HOME || path.delimiter;
+  try {
+    process.chdir(dir);
+  } catch (err: any) {
+    console.error(`cd: ${dir}: No such file or directory`);
+  }
+}
 
 /**
  * Writes arguments to standard output
@@ -22,6 +38,15 @@ function exit(args: string[]): void {
 }
 
 /**
+ * Prints the current working directory
+ *
+ * @param {string[]} args
+ */
+function pwd(args: string[]): void {
+  console.log(process.cwd());
+}
+
+/**
  * Displays whether a command is a shell builtin or an external executable
  *
  * @param {string[]} args
@@ -35,25 +60,17 @@ function type(args: string[]): void {
     if (executablePath) {
       console.log(`${command} is ${executablePath}`);
     } else {
-      console.log(`${command}: not found`);
+      console.error(`${command}: not found`);
     }
   }
 }
 
-/**
- * Prints the current working directory
- *
- * @param {string[]} args
- */
-function pwd(args: string[]): void {
-  console.log(process.cwd());
-}
-
 const builtins: Record<string, BuiltinCommand> = {
-  exit,
+  cd,
   echo,
-  type,
+  exit,
   pwd,
+  type,
 };
 
 export default builtins;
