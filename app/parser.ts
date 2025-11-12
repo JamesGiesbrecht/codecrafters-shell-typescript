@@ -21,7 +21,7 @@ class CommandParser {
           tokens.push(current);
           current = "";
         }
-      } else if (this._isQuote(char)) {
+      } else if (Boolean(this._isQuote(char))) {
         // Read ahead on the quoted text and advance the index to match
         const { value, endIndex } = this._readQuotedSection(input, char, i);
         current += value;
@@ -51,7 +51,15 @@ class CommandParser {
     // Read until we find the closing quote, matching quoteChar
     for (let i = startIndex; i < input.length; i++) {
       const char = input[i];
-      if (char === quoteChar) {
+      if (this._isEscape(char) && this._isQuote(quoteChar) === 2) {
+        // Handle escape characters for strings that are double quoted
+        const escapableCharacters = ['"', "\\", "$", "`", "\n"];
+        const escapedChar = input[i + 1];
+        if (escapableCharacters.includes(escapedChar)) {
+          value += escapedChar;
+          i++;
+        }
+      } else if (char === quoteChar) {
         // Found closing quote, Omit it from the result and return
         endIndex = i;
         break;
@@ -62,8 +70,21 @@ class CommandParser {
     return { value, endIndex };
   }
 
-  private _isQuote(char: string): boolean {
-    return char === '"' || char === "'";
+  /**
+   *
+   * @param char character to determine if it is a quote or not
+   * @returns 1 if it is a quote, 2 if it is a double quote, 0 if it is not a quote
+   * Can be evaluated to a truthy value with Boolean()
+   */
+  private _isQuote(char: string): number {
+    switch (char) {
+      case "'":
+        return 1;
+      case '"':
+        return 2;
+      default:
+        return 0;
+    }
   }
 
   private _isWhitespace(char: string): boolean {
