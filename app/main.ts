@@ -1,9 +1,13 @@
 import { createInterface } from "readline";
 import { execSync } from "child_process";
-import { parseInput, findExecutableInPath } from "./utils";
+import Parser from "./InputParser";
+import { findExecutableInPath } from "./utils";
 import builtins from "./builtins";
+import CONSTANTS from "./constants";
 
-const PROMPT_PREFIX = "$ ";
+// TODO
+// Create class to handle the inout
+// Class should save the stdout to an internal buffer so we can write it or redirect it to a file
 
 // Create interface
 export const rl = createInterface({
@@ -12,8 +16,8 @@ export const rl = createInterface({
 });
 
 const repl = function () {
-  rl.question(PROMPT_PREFIX, (fullCommand) => {
-    const { command, args } = parseInput(fullCommand);
+  rl.question(CONSTANTS.PROMPT_PREFIX, (fullCommand) => {
+    const { command, args, redirects } = Parser.parseLine(fullCommand);
     if (!command) {
       // No input
       repl();

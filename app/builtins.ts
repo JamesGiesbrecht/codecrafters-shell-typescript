@@ -1,7 +1,6 @@
 import path from "path";
 import { findExecutableInPath } from "./utils";
-
-type BuiltinCommand = (args: string[]) => void;
+import type { BuiltinCommand } from "./types";
 
 /**
  * Changes the current working directory

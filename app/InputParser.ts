@@ -1,8 +1,19 @@
-class CommandParser {
+import type { ParsedCommand, OutputRedirect } from "./types";
+import { OutputOperators } from "./constants";
+
+class InputParser {
   constructor() {}
 
-  parse(input: string): string {
-    return this.tokenize(input).join(" ");
+  parseLine(input: string): ParsedCommand {
+    const tokens = this.tokenize(input);
+
+    const { args, redirects } = this.parseRedirects(tokens);
+    const res: ParsedCommand = {
+      command: args[0],
+      args: args.slice(1),
+      redirects: redirects,
+    };
+    return res;
   }
 
   tokenize(input: string): string[] {
@@ -35,6 +46,29 @@ class CommandParser {
       tokens.push(current);
     }
     return tokens;
+  }
+
+  private parseRedirects(tokens: string[]): {
+    args: string[];
+    redirects: OutputRedirect[];
+  } {
+    const redirects: OutputRedirect[] = [];
+    OutputOperators.forEach((operator) => {
+      const operatorIndex = tokens.indexOf(operator);
+      if (operatorIndex !== -1) {
+        const redirect = {
+          operator,
+          path: tokens[operatorIndex + 1],
+          operatorIndex,
+        };
+        redirects.push(redirect);
+        tokens.splice(operatorIndex, 1);
+      }
+    });
+    return {
+      args: tokens,
+      redirects,
+    };
   }
 
   private _readQuotedSection(
@@ -99,6 +133,6 @@ class CommandParser {
   }
 }
 
-const commandParser = new CommandParser();
+const commandParser = new InputParser();
 
 export default commandParser;

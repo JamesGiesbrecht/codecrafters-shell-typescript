@@ -1,16 +1,5 @@
 import fs from "fs";
 import path from "path";
-import Parser from "./parser";
-
-const parseInput = function (input: string): {
-  command: string;
-  args: string[];
-} {
-  const tokens = Parser.tokenize(input);
-  const command = tokens[0];
-  const args = tokens.slice(1);
-  return { command, args };
-};
 
 const isExecutable = (filePath: string): boolean => {
   try {
@@ -33,4 +22,4 @@ const findExecutableInPath = (command: string): string | null => {
   return null;
 };
 
-export { parseInput, findExecutableInPath };
+export { findExecutableInPath };
