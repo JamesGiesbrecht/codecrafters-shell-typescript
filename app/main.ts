@@ -1,40 +1,24 @@
 import { createInterface } from "readline";
-import { execSync } from "child_process";
-import Parser from "./InputParser";
-import { findExecutableInPath } from "./utils";
-import builtins from "./builtins";
-import CONSTANTS from "./constants";
+import CONSTANTS from "./util/constants";
+import ReplHandler from "./handlers/ReplHandler";
 
-// TODO
-// Create class to handle the inout
-// Class should save the stdout to an internal buffer so we can write it or redirect it to a file
-
-// Create interface
-export const rl = createInterface({
+const rl = createInterface({
   input: process.stdin,
   output: process.stdout,
+  prompt: CONSTANTS.PROMPT_PREFIX,
 });
 
 const repl = function () {
-  rl.question(CONSTANTS.PROMPT_PREFIX, (fullCommand) => {
-    const { command, args, redirects } = Parser.parseLine(fullCommand);
-    if (!command) {
+  rl.prompt();
+
+  rl.on("line", (fullCommand) => {
+    const replHandler = new ReplHandler(fullCommand, rl);
+    if (!replHandler.parsedLine.command) {
       // No input
-      repl();
+      rl.prompt();
       return;
     }
-    const builtinCommand = builtins[command];
-    if (builtinCommand) {
-      // Built-in command
-      builtinCommand(args);
-    } else if (findExecutableInPath(command)) {
-      // External command
-      execSync(fullCommand, { stdio: "inherit" });
-    } else {
-      // Command not found
-      console.log(`${command}: command not found`);
-    }
-    repl();
+    replHandler.execute();
   });
 };
 

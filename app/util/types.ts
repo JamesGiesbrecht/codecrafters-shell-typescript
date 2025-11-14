@@ -1,5 +1,5 @@
 export type OutputOperator = ">>" | ">" | "1>";
-export type BuiltinCommand = (args: string[]) => void;
+export type BuiltinCommand = (args: string[]) => string | null;
 export type ParsedCommand = {
   command: string;
   args: string[];

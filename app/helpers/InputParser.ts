@@ -1,5 +1,5 @@
-import type { ParsedCommand, OutputRedirect } from "./types";
-import { OutputOperators } from "./constants";
+import type { ParsedCommand, OutputRedirect } from "../util/types";
+import { OutputOperators } from "../util/constants";
 
 class InputParser {
   constructor() {}
@@ -62,7 +62,8 @@ class InputParser {
           operatorIndex,
         };
         redirects.push(redirect);
-        tokens.splice(operatorIndex, 1);
+        // Remove the operator and the output path from the tokens
+        tokens.splice(operatorIndex, 2);
       }
     });
     return {

@@ -1,11 +1,11 @@
 import path from "path";
-import { findExecutableInPath } from "./utils";
+import FileHelper from "../helpers/FileHelper";
 import type { BuiltinCommand } from "./types";
 
 /**
  * Changes the current working directory
  */
-function cd(args: string[]): void {
+function cd(args: string[]) {
   const HOME_DIR = "~";
   const defaultDir = process.env.HOME || path.delimiter;
   // cd to arg, home directory, or root
@@ -13,46 +13,48 @@ function cd(args: string[]): void {
   if (dir === HOME_DIR) dir = defaultDir;
   try {
     process.chdir(dir);
+    return null;
   } catch (err: any) {
-    console.error(`cd: ${dir}: No such file or directory`);
+    return `cd: ${dir}: No such file or directory`;
   }
 }
 
 /**
  * Writes arguments to standard output
  */
-function echo(args: string[]): void {
-  console.log(args.join(" "));
+function echo(args: string[]): string {
+  return args.join(" ");
 }
 
 /**
  * Exits the shell with the given exit code
  */
-function exit(args: string[]): void {
+function exit(args: string[]) {
   const exitCode = args.length > 0 ? parseInt(args[0], 10) : 0;
   process.exit(exitCode);
+  return null;
 }
 
 /**
  * Prints the current working directory
  */
-function pwd(args: string[]): void {
-  console.log(process.cwd());
+function pwd(args: string[]): string {
+  return process.cwd();
 }
 
 /**
  * Displays whether a command is a shell builtin or an external executable
  */
-function type(args: string[]): void {
+function type(args: string[]): string {
   const command = args[0];
   if (builtins[command]) {
-    console.log(`${command} is a shell builtin`);
+    return `${command} is a shell builtin`;
   } else {
-    const executablePath = findExecutableInPath(command);
+    const executablePath = FileHelper.findExecutableInPath(command);
     if (executablePath) {
-      console.log(`${command} is ${executablePath}`);
+      return `${command} is ${executablePath}`;
     } else {
-      console.error(`${command}: not found`);
+      return `${command}: not found`;
     }
   }
 }
