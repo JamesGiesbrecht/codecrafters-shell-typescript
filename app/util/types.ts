@@ -1,4 +1,7 @@
-export type OutputOperator = ">>" | ">" | "1>";
+type StdoutRedirectOperator = ">" | "1>" | "1>>" | ">>";
+type StderrRedirectOperator = "2>" | "2>>";
+export type RedirectOperator = StdoutRedirectOperator | StderrRedirectOperator;
+
 export type BuiltinCommand = (args: string[]) => string | null;
 export type ParsedCommand = {
   command: string;
@@ -7,7 +10,7 @@ export type ParsedCommand = {
 };
 
 export type OutputRedirect = {
-  operator: OutputOperator;
+  operator: RedirectOperator;
   path: string;
   operatorIndex?: number;
 };

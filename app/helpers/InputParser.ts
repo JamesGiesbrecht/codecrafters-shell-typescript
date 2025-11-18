@@ -1,5 +1,5 @@
 import type { ParsedCommand, OutputRedirect } from "../util/types";
-import { OutputOperators } from "../util/constants";
+import { RedirectOperators } from "../util/constants";
 
 class InputParser {
   constructor() {}
@@ -53,7 +53,7 @@ class InputParser {
     redirects: OutputRedirect[];
   } {
     const redirects: OutputRedirect[] = [];
-    OutputOperators.forEach((operator) => {
+    RedirectOperators.forEach((operator) => {
       const operatorIndex = tokens.indexOf(operator);
       if (operatorIndex !== -1) {
         const redirect = {

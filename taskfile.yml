@@ -1,0 +1,11 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  PROGRAM_NAME: ./your_program.sh
+
+tasks:
+  run:
+    cmds:
+      - '{{.PROGRAM_NAME}}'
