@@ -59,12 +59,27 @@ function type(args: string[]): string {
   }
 }
 
+function xyz_foo(args: string[]): string {
+  return `xyz_foo`;
+}
+
+function xyz_foo_bar(args: string[]): string {
+  return `xyz_foo_bar`;
+}
+
+function xyz_foo_bar_baz(args: string[]): string {
+  return `xyz_foo_bar_baz`;
+}
+
 const builtins: Record<string, BuiltinCommand> = {
   cd,
   echo,
   exit,
   pwd,
   type,
+  // xyz_foo,
+  // xyz_foo_bar,
+  // xyz_foo_bar_baz,
 };
 
 export default builtins;

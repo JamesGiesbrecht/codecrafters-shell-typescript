@@ -3,6 +3,7 @@ import CONSTANTS from "./util/constants";
 import ReplHandler from "./handlers/ReplHandler";
 import FileHelper from "./helpers/FileHelper";
 import builtins from "./util/builtins";
+import { getLongestCommonPrefix } from "./util/completer";
 
 const beepSignal = () => {
   process.stdout.write("\u0007");
@@ -10,6 +11,9 @@ const beepSignal = () => {
 
 const repl = function () {
   let tabCounter = 0;
+  const resetState = () => {
+    tabCounter = 0;
+  };
 
   const rl = createInterface({
     input: process.stdin,
@@ -26,27 +30,43 @@ const repl = function () {
       const hits = Array.from(
         new Set(completions.filter((c) => c.startsWith(line.toLowerCase())))
       );
+
       if (hits.length === 0) {
         beepSignal();
+        resetState();
         return [completions, line];
       }
+
       // Return the first hit
       if (hits.length === 1) {
+        resetState();
         return [hits, line];
       }
-      // If there are multiple matches, print them out and write the original line to the screen
+
+      // If there are multiple matches
       if (hits.length > 1) {
-        if (tabCounter === 0) {
+        const lcp = getLongestCommonPrefix(hits);
+
+        if (lcp && lcp !== line) {
+          // There's a common prefix to complete to
+          resetState();
+          return [[lcp.trim()], line];
+        } else if (tabCounter === 0) {
+          // First tab: beep, don't complete
           tabCounter += 1;
           beepSignal();
+          return [[], line];
         } else {
+          // Second tab: show all options, keep line unchanged
           process.stdout.write(
             `\n${hits.join(" ")}\n${CONSTANTS.PROMPT_PREFIX}${line}`
           );
-          tabCounter = 0;
+          resetState();
+          return [[], line];
         }
-        return [[], line];
       }
+
+      resetState();
       return [hits, line];
     },
   });
