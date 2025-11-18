@@ -23,13 +23,21 @@ export default class FileHelper {
     return null;
   }
 
-  public static writeFile(filePath: string, content: string) {
+  public static writeFile(
+    filePath: string,
+    content: string,
+    shouldAppend: boolean = false
+  ): void {
     const dir = path.dirname(filePath);
     const filename = path.basename(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(filePath, content, { encoding: "utf8" });
+    if (shouldAppend) {
+      fs.appendFileSync(filePath, `\n${content}`, { encoding: "utf8" });
+    } else {
+      fs.writeFileSync(filePath, content, { encoding: "utf8" });
+    }
   }
 }
 // ls -1 tmp/ant > tmp/cow/cow.md
