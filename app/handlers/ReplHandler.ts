@@ -3,11 +3,7 @@ import cp from "child_process";
 import Parser from "../helpers/InputParser";
 import FileHelper from "../helpers/FileHelper";
 import builtins from "../util/builtins";
-import type {
-  BuiltinCommand,
-  ParsedCommand,
-  RedirectOperator,
-} from "../util/types";
+import type { ParsedCommand, RedirectOperator } from "../util/types";
 import { StdoutOperators, StderrOperators } from "../util/constants";
 
 /**
