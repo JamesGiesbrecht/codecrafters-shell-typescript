@@ -34,7 +34,8 @@ export default class FileHelper {
       fs.mkdirSync(dir, { recursive: true });
     }
     if (shouldAppend) {
-      fs.appendFileSync(filePath, `\n${content}`, { encoding: "utf8" });
+      const fileContent = content ? `\n${content}` : "";
+      fs.appendFileSync(filePath, fileContent, { encoding: "utf8" });
     } else {
       fs.writeFileSync(filePath, content, { encoding: "utf8" });
     }
