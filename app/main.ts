@@ -8,7 +8,11 @@ const completer = (line: string) => {
   const completions = Object.keys(builtins).map((c) => `${c.toLowerCase()} `);
   // Find partial matches
   const hits = completions.filter((c) => c.startsWith(line.toLowerCase()));
-  return [hits.length ? hits : completions, line];
+  if (hits.length) {
+    return [hits, line];
+  }
+  process.stdout.write("\x07");
+  return [completions, line];
 };
 
 const rl = createInterface({
