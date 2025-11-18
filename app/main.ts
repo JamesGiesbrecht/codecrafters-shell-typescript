@@ -1,11 +1,14 @@
 import { createInterface } from "readline";
 import CONSTANTS from "./util/constants";
 import ReplHandler from "./handlers/ReplHandler";
+import FileHelper from "./helpers/FileHelper";
 import builtins from "./util/builtins";
 
 const completer = (line: string) => {
   // Get command names add spaces to the end of the command
-  const completions = Object.keys(builtins).map((c) => `${c.toLowerCase()} `);
+  const completions = Object.keys(builtins)
+    .concat(FileHelper.getExecutablesInPath())
+    .map((c) => `${c.toLowerCase()} `);
   // Find partial matches
   const hits = completions.filter((c) => c.startsWith(line.toLowerCase()));
   if (hits.length) {

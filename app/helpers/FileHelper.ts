@@ -2,6 +2,25 @@ import fs from "fs";
 import path from "path";
 
 export default class FileHelper {
+  public static getExecutablesInPath(): string[] {
+    const pathDirs = (process.env.PATH || "").split(path.delimiter);
+    const executables: string[] = [];
+    pathDirs.forEach((p) => {
+      try {
+        fs.readdirSync(p)
+          .filter((file) => {
+            return FileHelper.isExecutable(path.join(p, file));
+          })
+          .forEach((file) => {
+            executables.push(file);
+          });
+      } catch {
+        return;
+      }
+    });
+    return executables;
+  }
+
   public static isExecutable(filePath: string): boolean {
     try {
       fs.accessSync(filePath, fs.constants.X_OK);
