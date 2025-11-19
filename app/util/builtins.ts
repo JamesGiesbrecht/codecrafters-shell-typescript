@@ -23,7 +23,11 @@ function cd(args: string[]) {
  * Writes arguments to standard output
  */
 function echo(args: string[]): string {
-  return args.join(" ");
+  // handle -n (no trailing newline)
+  if (args.length > 0 && args[0] === "-n") {
+    return args.slice(1).join(" ");
+  }
+  return args.join(" ") + "\n";
 }
 
 /**
