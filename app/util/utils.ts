@@ -1,3 +1,7 @@
+export function beepSignal(): void {
+  process.stdout.write("\u0007");
+}
+
 export function getLongestCommonPrefix(words: string[]): string {
   if (words.length === 0) {
     return "";

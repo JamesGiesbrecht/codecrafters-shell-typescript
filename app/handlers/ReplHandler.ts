@@ -1,35 +1,97 @@
-import readline from "readline";
+import readline, { type CompleterResult } from "readline";
 import cp from "child_process";
 import Parser from "../helpers/InputParser";
 import FileHelper from "../helpers/FileHelper";
 import builtins from "../util/builtins";
 import type { ParsedCommand, RedirectOperator } from "../util/types";
 import { StdoutOperators, StderrOperators } from "../util/constants";
+import { beepSignal, getLongestCommonPrefix } from "../util/utils";
+import CONSTANTS from "../util/constants";
 
 /**
  * Handles the Read-Eval-Print Loop (REPL) for shell command execution.
- * Manages parsing, execution, and output redirection of shell commands.
+ *
+ * Responsibilities:
+ * - Parses user input into command structures
+ * - Executes built-in and external commands
+ * - Manages output redirection (stdout/stderr to files)
+ * - Provides tab completion for commands
+ *
+ * @example
+ * const repl = new ReplHandler();
+ * repl.rl.prompt();
+ * repl.rl.on("line", (command) => {
+ *   repl.setLine(command);
+ *   repl.execute();
+ * });
  */
 export default class ReplHandler {
-  protected line: string;
-  protected rl: readline.Interface;
+  public line: string = "";
+  public rl: readline.Interface;
   public parsedLine: ParsedCommand;
+  private tabCounter: number = 0;
+
+  constructor() {
+    this.rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      prompt: CONSTANTS.PROMPT_PREFIX,
+      completer: this.completer.bind(this),
+    });
+    this.parsedLine = Parser.parseLine(this.line);
+  }
+
+  // ==================== Public API ====================
 
   /**
-   * Creates a new ReplHandler instance.
-   * @param {string} line - The input command line to parse and execute
-   * @param {readline.Interface} rl - The readline interface for prompt management
+   * Updates the current line and re-parses it.
+   * @param line - The new command line string
    */
-  constructor(line: string, rl: readline.Interface) {
+  public setLine(line: string): void {
     this.line = line;
-    this.rl = rl;
-    this.parsedLine = Parser.parseLine(line);
+    this.parsedLine = Parser.parseLine(this.line);
   }
 
   /**
+   * Executes the parsed command line.
+   * Attempts execution as a built-in command first, then as an external command.
+   * Displays error message if command is not found.
+   */
+  public execute(): void {
+    if (this.executeBuiltinCommand()) return;
+    if (this.executeExternalCommand()) return;
+    this.handleCommandNotFound();
+  }
+
+  /**
+   * Writes standard output to console or redirects to file(s).
+   * @param line - The output line to write
+   * @param redirects - Optional redirect targets
+   */
+  public writeStdout(
+    line: string | null,
+    redirects: ParsedCommand["redirects"] = []
+  ): void {
+    this.writeOutput(line, redirects, console.log);
+  }
+
+  /**
+   * Writes standard error to console or redirects to file(s).
+   * @param line - The error line to write
+   * @param redirects - Optional redirect targets
+   */
+  public writeStdError(
+    line: string | null,
+    redirects: ParsedCommand["redirects"] = []
+  ): void {
+    this.writeOutput(line, redirects, console.error);
+  }
+
+  // ==================== Private: Command Execution ====================
+
+  /**
    * Executes a built-in shell command.
-   * @private
-   * @returns {boolean} True if a built-in command was found and executed, false otherwise
+   * @returns True if a built-in command was found and executed
    */
   private executeBuiltinCommand(): boolean {
     const builtinCommand = builtins[this.parsedLine.command];
@@ -49,28 +111,58 @@ export default class ReplHandler {
 
   /**
    * Executes an external command found in the system PATH.
-   * @private
-   * @returns {boolean} True if an executable was found and executed, false otherwise
+   * @returns True if an executable was found and executed
    */
   private executeExternalCommand(): boolean {
     if (!FileHelper.findExecutableInPath(this.parsedLine.command)) return false;
-
-    cp.execFile(
-      this.parsedLine.command,
-      this.parsedLine.args,
-      (error, stdout, stderr) => {
-        this.handleRedirects(stdout, stderr);
-        this.rl.prompt();
-      }
+    this.executeCommandAsync((cb) =>
+      cp.execFile(this.parsedLine.command, this.parsedLine.args, cb)
     );
     return true;
   }
 
   /**
+   * Executes an asynchronous command with callback.
+   * @param fn - Function that accepts a callback for command execution
+   */
+  private executeCommandAsync(
+    fn: (
+      callback: (error: Error | null, stdout: string, stderr: string) => void
+    ) => void
+  ): void {
+    fn((error, stdout, stderr) => {
+      const errorOutput = error ? stderr || error.message : null;
+      this.handleRedirects(stdout || null, errorOutput);
+      this.rl.prompt();
+    });
+  }
+
+  /**
+   * Handles the case when a command is not found.
+   */
+  private handleCommandNotFound(): void {
+    this.handleRedirects(`${this.parsedLine.command}: command not found`, null);
+    this.rl.prompt();
+  }
+
+  // ==================== Private: Output Redirection ====================
+
+  /**
+   * Handles output redirection for stdout and stderr.
+   * @param stdout - Standard output content
+   * @param stderr - Standard error content
+   */
+  private handleRedirects(stdout: string | null, stderr: string | null): void {
+    const stdoutRedirects = this.getRedirectsByOperator(StdoutOperators);
+    const stderrRedirects = this.getRedirectsByOperator(StderrOperators);
+    this.writeStdout(stdout, stdoutRedirects);
+    this.writeStdError(stderr, stderrRedirects);
+  }
+
+  /**
    * Filters redirects by the specified operators.
-   * @private
-   * @param {RedirectOperator[]} operators - The operators to filter by
-   * @returns {ParsedCommand["redirects"]} Array of redirects matching the operators
+   * @param operators - The operators to filter by (e.g., '>', '>>')
+   * @returns Array of redirects matching the operators
    */
   private getRedirectsByOperator(
     operators: RedirectOperator[]
@@ -82,79 +174,85 @@ export default class ReplHandler {
 
   /**
    * Writes output to either files (if redirects exist) or to the console.
-   * @private
-   * @param {string | null} line - The output line to write
-   * @param {ParsedCommand["redirects"]} redirects - Array of redirect targets
-   * @param {Function} writer - The callback function to write to console
+   * @param line - The output line to write
+   * @param redirects - Array of redirect targets
+   * @param writer - The callback function to write to console
    */
   private writeOutput(
     line: string | null,
     redirects: ParsedCommand["redirects"],
     writer: (msg: string) => void
-  ) {
+  ): void {
     if (redirects.length > 0) {
       redirects.forEach((redirect) => {
-        const shouldAppend = redirect.operator.includes(">>");
-        FileHelper.writeFile(redirect.path, line?.trim() || "", shouldAppend);
+        FileHelper.writeFile(
+          redirect.path,
+          line?.trim() || "",
+          redirect.operator.includes(">>")
+        );
       });
     } else if (line) {
       writer(line.trim());
     }
   }
 
+  // ==================== Private: Tab Completion ====================
+
   /**
-   * Writes standard output to console or redirects to file(s).
-   * @protected
-   * @param {string | null} line - The output line to write
-   * @param {ParsedCommand["redirects"]} [redirects=[]] - Optional redirect targets
+   * Resets the tab counter for command completion cycling.
    */
-  protected writeStdout(
-    line: string | null,
-    redirects: ParsedCommand["redirects"] = []
-  ) {
-    this.writeOutput(line, redirects, console.log);
+  private resetState(): void {
+    this.tabCounter = 0;
   }
 
   /**
-   * Writes standard error to console or redirects to file(s).
-   * @protected
-   * @param {string | null} line - The error line to write
-   * @param {ParsedCommand["redirects"]} [redirects=[]] - Optional redirect targets
+   * Provides tab completion for commands.
+   * - First tab: completes to longest common prefix
+   * - Second tab: shows all matching options
+   * @param line - The current line being typed
+   * @returns Tuple of [matches, original_line]
    */
-  protected writeStdError(
-    line: string | null,
-    redirects: ParsedCommand["redirects"] = []
-  ) {
-    this.writeOutput(line, redirects, console.error);
-  }
+  private completer(line: string): CompleterResult {
+    const completions = Object.keys(builtins)
+      .concat(FileHelper.getExecutablesInPath())
+      .map((c) => `${c.toLowerCase()} `)
+      .sort();
 
-  /**
-   * Handles output redirection for stdout and stderr.
-   * @protected
-   * @param {string | null} stdout - Standard output content
-   * @param {string | null} stderr - Standard error content
-   */
-  protected handleRedirects(stdout: string | null, stderr: string | null) {
-    const stdoutRedirects = this.getRedirectsByOperator(StdoutOperators);
-    const stderrRedirects = this.getRedirectsByOperator(StderrOperators);
-    this.writeStdout(stdout, stdoutRedirects);
-    this.writeStdError(stderr, stderrRedirects);
-  }
+    const hits = Array.from(
+      new Set(completions.filter((c) => c.startsWith(line.toLowerCase())))
+    );
 
-  /**
-   * Executes the parsed command line.
-   * Attempts execution as a built-in command first, then as an external command.
-   * @public
-   */
-  public execute() {
-    if (this.executeBuiltinCommand()) {
-      return;
+    // No matches
+    if (hits.length === 0) {
+      beepSignal();
+      this.resetState();
+      return [completions, line];
     }
-    if (this.executeExternalCommand()) {
-      return;
+
+    // Single match
+    if (hits.length === 1) {
+      this.resetState();
+      return [hits, line];
     }
-    // Command not found
-    this.writeStdout(`${this.parsedLine.command}: command not found`);
-    this.rl.prompt();
+
+    // Multiple matches
+    const lcp = getLongestCommonPrefix(hits);
+
+    if (lcp && lcp !== line) {
+      this.resetState();
+      return [[lcp.trim()], line];
+    }
+
+    if (this.tabCounter === 0) {
+      this.tabCounter += 1;
+      beepSignal();
+      return [[], line];
+    }
+
+    process.stdout.write(
+      `\n${hits.join(" ")}\n${CONSTANTS.PROMPT_PREFIX}${line}`
+    );
+    this.resetState();
+    return [[], line];
   }
 }
