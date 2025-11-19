@@ -48,16 +48,16 @@ export default class FileHelper {
     shouldAppend: boolean = false
   ): void {
     const dir = path.dirname(filePath);
-    const filename = path.basename(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
+    if (content) {
+      content += "\n";
+    }
     if (shouldAppend) {
-      const fileContent = content ? `\n${content}` : "";
-      fs.appendFileSync(filePath, fileContent, { encoding: "utf8" });
+      fs.appendFileSync(filePath, content, { encoding: "utf8" });
     } else {
       fs.writeFileSync(filePath, content, { encoding: "utf8" });
     }
   }
 }
-// ls -1 tmp/ant > tmp/cow/cow.md

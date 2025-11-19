@@ -36,3 +36,20 @@ export function getLongestCommonPrefix(words: string[]): string {
 
   return result;
 }
+
+export function splitArrayOn(arr: string[], delimiter: string): string[][] {
+  const out: string[][] = [];
+  let current: string[] = [];
+  arr.forEach((word) => {
+    if (word === delimiter) {
+      out.push(current);
+      current = [];
+    } else {
+      current.push(word);
+    }
+  });
+  if (current.length > 0) {
+    out.push(current);
+  }
+  return out;
+}

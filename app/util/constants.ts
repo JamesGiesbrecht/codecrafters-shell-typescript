@@ -2,6 +2,7 @@ import type { RedirectOperator } from "./types";
 
 export default {
   PROMPT_PREFIX: "$ ",
+  PIPE: "|",
 };
 
 export const StdoutOperators: RedirectOperator[] = [

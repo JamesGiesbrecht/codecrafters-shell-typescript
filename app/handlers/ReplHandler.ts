@@ -7,28 +7,16 @@ import type { ParsedCommand, RedirectOperator } from "../util/types";
 import { StdoutOperators, StderrOperators } from "../util/constants";
 import { beepSignal, getLongestCommonPrefix } from "../util/utils";
 import CONSTANTS from "../util/constants";
+import PipelineHandler from "./PipelineHandler";
 
 /**
- * Handles the Read-Eval-Print Loop (REPL) for shell command execution.
- *
- * Responsibilities:
- * - Parses user input into command structures
- * - Executes built-in and external commands
- * - Manages output redirection (stdout/stderr to files)
- * - Provides tab completion for commands
- *
- * @example
- * const repl = new ReplHandler();
- * repl.rl.prompt();
- * repl.rl.on("line", (command) => {
- *   repl.setLine(command);
- *   repl.execute();
- * });
+ * ReplHandler - Read / Eval / Print Loop for the shell.
  */
 export default class ReplHandler {
   public line: string = "";
   public rl: readline.Interface;
   public parsedLine: ParsedCommand;
+  public pipes: ParsedCommand[] = [];
   private tabCounter: number = 0;
 
   constructor() {
@@ -38,7 +26,7 @@ export default class ReplHandler {
       prompt: CONSTANTS.PROMPT_PREFIX,
       completer: this.completer.bind(this),
     });
-    this.parsedLine = Parser.parseLine(this.line);
+    this.parsedLine = Parser.parseLine(this.line)[0];
   }
 
   // ==================== Public API ====================
@@ -49,7 +37,10 @@ export default class ReplHandler {
    */
   public setLine(line: string): void {
     this.line = line;
-    this.parsedLine = Parser.parseLine(this.line);
+    const parsedCommands = Parser.parseLine(this.line);
+    if (parsedCommands.length === 0) return;
+    this.parsedLine = parsedCommands[0];
+    this.pipes = parsedCommands.slice(1);
   }
 
   /**
@@ -58,9 +49,14 @@ export default class ReplHandler {
    * Displays error message if command is not found.
    */
   public execute(): void {
-    if (this.executeBuiltinCommand()) return;
-    if (this.executeExternalCommand()) return;
-    this.handleCommandNotFound();
+    if (this.pipes.length > 0) {
+      const pipelineHandler = new PipelineHandler(this);
+      pipelineHandler.handle();
+    } else {
+      if (this.executeBuiltinCommand()) return;
+      if (this.executeExternalCommand()) return;
+      this.handleCommandNotFound();
+    }
   }
 
   /**
@@ -72,7 +68,7 @@ export default class ReplHandler {
     line: string | null,
     redirects: ParsedCommand["redirects"] = []
   ): void {
-    this.writeOutput(line, redirects, console.log);
+    this.writeOutput(line, redirects, (s) => process.stdout.write(s));
   }
 
   /**
@@ -84,7 +80,7 @@ export default class ReplHandler {
     line: string | null,
     redirects: ParsedCommand["redirects"] = []
   ): void {
-    this.writeOutput(line, redirects, console.error);
+    this.writeOutput(line, redirects, (s) => process.stderr.write(s));
   }
 
   // ==================== Private: Command Execution ====================
@@ -171,7 +167,7 @@ export default class ReplHandler {
       operators.includes(redirect.operator)
     );
   }
-
+  // ls -1 nonexistent 2>> tmp/cow/pig.md
   /**
    * Writes output to either files (if redirects exist) or to the console.
    * @param line - The output line to write
@@ -192,7 +188,8 @@ export default class ReplHandler {
         );
       });
     } else if (line) {
-      writer(line.trim());
+      const out = line.endsWith("\n") ? line : `${line}\n`;
+      writer(out);
     }
   }
 

@@ -1,19 +1,23 @@
 import type { ParsedCommand, OutputRedirect } from "../util/types";
-import { RedirectOperators } from "../util/constants";
+import CONSTANTS, { RedirectOperators } from "../util/constants";
+import { splitArrayOn } from "../util/utils";
 
 class InputParser {
   constructor() {}
 
-  parseLine(input: string): ParsedCommand {
+  parseLine(input: string): ParsedCommand[] {
     const tokens = this.tokenize(input);
+    const pipedCommands = splitArrayOn(tokens, CONSTANTS.PIPE);
+    const parsedCommands: ParsedCommand[] = pipedCommands.map((pipe) => {
+      const { args, redirects } = this.parseRedirects(pipe);
+      return {
+        command: args[0],
+        args: args.slice(1),
+        redirects: redirects,
+      };
+    });
 
-    const { args, redirects } = this.parseRedirects(tokens);
-    const res: ParsedCommand = {
-      command: args[0],
-      args: args.slice(1),
-      redirects: redirects,
-    };
-    return res;
+    return parsedCommands;
   }
 
   tokenize(input: string): string[] {
