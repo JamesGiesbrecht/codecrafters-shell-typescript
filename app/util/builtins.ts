@@ -1,4 +1,5 @@
 import path from "path";
+import repl from "../handlers/ReplHandler";
 import FileHelper from "../helpers/FileHelper";
 import type { BuiltinCommand } from "./types";
 
@@ -37,6 +38,17 @@ function exit(args: string[]) {
   const exitCode = args.length > 0 ? parseInt(args[0], 10) : 0;
   process.exit(exitCode);
   return null;
+}
+
+/**
+ * Prints the current history
+ */
+function history(args: string[]): string {
+  let out = "";
+  for (let i = 0; i < repl.history.length; i++) {
+    out += `${i + 1} ${repl.history[i]}\n`;
+  }
+  return out;
 }
 
 /**
@@ -79,6 +91,7 @@ const builtins: Record<string, BuiltinCommand> = {
   cd,
   echo,
   exit,
+  history,
   pwd,
   type,
   // xyz_foo,

@@ -12,8 +12,9 @@ import PipelineHandler from "./PipelineHandler";
 /**
  * ReplHandler - Read / Eval / Print Loop for the shell.
  */
-export default class ReplHandler {
+class ReplHandler {
   public line: string = "";
+  public history: string[] = [];
   public rl: readline.Interface;
   public parsedLine: ParsedCommand;
   public pipes: ParsedCommand[] = [];
@@ -37,6 +38,7 @@ export default class ReplHandler {
    */
   public setLine(line: string): void {
     this.line = line;
+    this.history.push(line);
     const parsedCommands = Parser.parseLine(this.line);
     if (parsedCommands.length === 0) return;
     this.parsedLine = parsedCommands[0];
@@ -50,7 +52,7 @@ export default class ReplHandler {
    */
   public execute(): void {
     if (this.pipes.length > 0) {
-      const pipelineHandler = new PipelineHandler(this);
+      const pipelineHandler = new PipelineHandler();
       pipelineHandler.handle();
     } else {
       if (this.executeBuiltinCommand()) return;
@@ -253,3 +255,5 @@ export default class ReplHandler {
     return [[], line];
   }
 }
+
+export default new ReplHandler();

@@ -1,7 +1,6 @@
-import ReplHandler from "./handlers/ReplHandler";
+import repl from "./handlers/ReplHandler";
 
-const repl = function () {
-  const repl = new ReplHandler();
+const replLoop = function () {
   repl.rl.prompt();
 
   repl.rl.on("line", (command) => {
@@ -15,4 +14,4 @@ const repl = function () {
   });
 };
 
-repl();
+replLoop();
