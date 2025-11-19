@@ -44,8 +44,9 @@ function exit(args: string[]) {
  * Prints the current history
  */
 function history(args: string[]): string {
+  const limit = args.length > 0 ? parseInt(args[0], 10) : repl.history.length;
   let out = "";
-  for (let i = 0; i < repl.history.length; i++) {
+  for (let i = repl.history.length - limit; i < repl.history.length; i++) {
     out += `${i + 1} ${repl.history[i]}\n`;
   }
   return out;
