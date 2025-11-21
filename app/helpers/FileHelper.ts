@@ -60,4 +60,12 @@ export default class FileHelper {
       fs.writeFileSync(filePath, content, { encoding: "utf8" });
     }
   }
+
+  public static readFile(filePath: string): string {
+    return fs.readFileSync(filePath, { encoding: "utf8" });
+  }
+
+  public static readHistory(filePath: string): string[] {
+    return fs.readFileSync(filePath, { encoding: "utf8" }).trim().split("\n");
+  }
 }

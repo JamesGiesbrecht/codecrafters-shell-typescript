@@ -44,7 +44,19 @@ function exit(args: string[]) {
  * Prints the current history
  */
 function history(args: string[]): string {
-  const limit = args.length > 0 ? parseInt(args[0], 10) : repl.history.length;
+  let limit = repl.history.length;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const argNum = parseInt(arg, 10);
+    if (!isNaN(argNum)) {
+      limit = argNum;
+    } else if (arg === "-r" && args[i + 1]) {
+      // Append file contents to history, do not print anything
+      repl.history.push(...FileHelper.readHistory(args[i + 1]));
+      return "";
+    }
+  }
+  // Build and number history
   let out = "";
   for (let i = repl.history.length - limit; i < repl.history.length; i++) {
     out += `${i + 1} ${repl.history[i]}\n`;
