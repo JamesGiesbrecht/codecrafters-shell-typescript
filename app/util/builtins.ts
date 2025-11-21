@@ -52,13 +52,29 @@ function history(args: string[]): string {
       limit = argNum;
     } else if (args[i + 1]) {
       const filePath = args[i + 1];
-      if (arg === "-r") {
-        // Append file contents to history, do not print anything
-        repl.history.push(...FileHelper.readHistory(args[i + 1]));
-      }
-      if (arg === "-w") {
-        // Write current history to file
-        FileHelper.writeFile(filePath, repl.history.join("\n"));
+      switch (arg) {
+        case "-r":
+          // Append file contents to history, do not print anything
+          repl.history.push(...FileHelper.readHistory(filePath));
+          break;
+        case "-w":
+          // Write current history to file
+          FileHelper.writeFile(filePath, repl.history.join("\n"));
+          break;
+        case "-a":
+          const indexOfLastAppend = repl.history
+            .toSpliced(-1, 1)
+            .findLastIndex((item) => item.startsWith("history -a"));
+          const startIndex =
+            indexOfLastAppend === -1 ? 0 : indexOfLastAppend + 1;
+          // Append current history to file
+          FileHelper.writeFile(
+            filePath,
+            repl.history.slice(startIndex).join("\n"),
+            "append"
+          );
+          break;
+        default:
       }
       return "";
     }

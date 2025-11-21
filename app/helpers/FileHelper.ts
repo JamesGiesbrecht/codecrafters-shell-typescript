@@ -45,7 +45,7 @@ export default class FileHelper {
   public static writeFile(
     filePath: string,
     content: string,
-    shouldAppend: boolean = false
+    mode: "rewrite" | "append" = "rewrite"
   ): void {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -54,10 +54,13 @@ export default class FileHelper {
     if (content) {
       content += "\n";
     }
-    if (shouldAppend) {
-      fs.appendFileSync(filePath, content, { encoding: "utf8" });
-    } else {
-      fs.writeFileSync(filePath, content, { encoding: "utf8" });
+    switch (mode) {
+      case "append":
+        fs.appendFileSync(filePath, content, { encoding: "utf8" });
+        break;
+      case "rewrite":
+        fs.writeFileSync(filePath, content, { encoding: "utf8" });
+        break;
     }
   }
 

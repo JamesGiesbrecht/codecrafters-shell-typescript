@@ -186,7 +186,7 @@ class ReplHandler {
         FileHelper.writeFile(
           redirect.path,
           line?.trim() || "",
-          redirect.operator.includes(">>")
+          redirect.operator.includes(">>") ? "append" : "rewrite"
         );
       });
     } else if (line) {
