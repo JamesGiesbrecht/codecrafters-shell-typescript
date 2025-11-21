@@ -36,6 +36,7 @@ function echo(args: string[]): string {
  */
 function exit(args: string[]) {
   const exitCode = args.length > 0 ? parseInt(args[0], 10) : 0;
+  repl.saveHistory();
   process.exit(exitCode);
   return null;
 }

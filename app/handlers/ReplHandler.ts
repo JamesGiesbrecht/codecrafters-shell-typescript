@@ -9,6 +9,8 @@ import { beepSignal, getLongestCommonPrefix } from "../util/utils";
 import CONSTANTS from "../util/constants";
 import PipelineHandler from "./PipelineHandler";
 
+const { HISTFILE } = process.env;
+
 /**
  * ReplHandler - Read / Eval / Print Loop for the shell.
  */
@@ -30,8 +32,7 @@ class ReplHandler {
     this.parsedLine = Parser.parseLine(this.line)[0];
   }
 
-  // ==================== Public API ====================
-
+  // MARK: Public API
   /**
    * Updates the current line and re-parses it.
    * @param line - The new command line string
@@ -87,8 +88,19 @@ class ReplHandler {
     this.writeOutput(line, redirects, (s) => process.stderr.write(s));
   }
 
-  // ==================== Private: Command Execution ====================
+  public initHistory() {
+    if (HISTFILE) {
+      builtins.history(["-r", HISTFILE]);
+    }
+  }
 
+  public saveHistory() {
+    if (HISTFILE) {
+      builtins.history(["-a", HISTFILE]);
+    }
+  }
+
+  // MARK: Private: Command Execution
   /**
    * Executes a built-in shell command.
    * @returns True if a built-in command was found and executed
@@ -145,7 +157,7 @@ class ReplHandler {
     this.rl.prompt();
   }
 
-  // ==================== Private: Output Redirection ====================
+  // MARK: Private: Output Redirection
 
   /**
    * Handles output redirection for stdout and stderr.
@@ -197,7 +209,7 @@ class ReplHandler {
     }
   }
 
-  // ==================== Private: Tab Completion ====================
+  // MARK: Private: Tab Completion
 
   /**
    * Resets the tab counter for command completion cycling.
@@ -255,15 +267,6 @@ class ReplHandler {
     );
     this.resetState();
     return [[], line];
-  }
-
-  // ==================== Private: Load History ====================
-
-  public initHistory() {
-    const { HISTFILE } = process.env;
-    if (HISTFILE) {
-      builtins.history(["-r", HISTFILE]);
-    }
   }
 }
 
