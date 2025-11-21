@@ -96,7 +96,7 @@ class ReplHandler {
 
   public saveHistory() {
     if (HISTFILE) {
-      builtins.history(["-a", HISTFILE]);
+      builtins.history(["-w", HISTFILE]);
     }
   }
 
