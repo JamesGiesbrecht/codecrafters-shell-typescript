@@ -50,9 +50,16 @@ function history(args: string[]): string {
     const argNum = parseInt(arg, 10);
     if (!isNaN(argNum)) {
       limit = argNum;
-    } else if (arg === "-r" && args[i + 1]) {
-      // Append file contents to history, do not print anything
-      repl.history.push(...FileHelper.readHistory(args[i + 1]));
+    } else if (args[i + 1]) {
+      const filePath = args[i + 1];
+      if (arg === "-r") {
+        // Append file contents to history, do not print anything
+        repl.history.push(...FileHelper.readHistory(args[i + 1]));
+      }
+      if (arg === "-w") {
+        // Write current history to file
+        FileHelper.writeFile(filePath, repl.history.join("\n"));
+      }
       return "";
     }
   }
