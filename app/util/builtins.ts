@@ -54,7 +54,7 @@ function history(args: string[]): string {
       const filePath = args[i + 1];
       switch (arg) {
         case "-r":
-          // Append file contents to history, do not print anything
+          // Read file contents to history, do not print anything
           repl.history.push(...FileHelper.readHistory(filePath));
           break;
         case "-w":

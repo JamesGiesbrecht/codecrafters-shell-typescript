@@ -69,6 +69,9 @@ export default class FileHelper {
   }
 
   public static readHistory(filePath: string): string[] {
-    return fs.readFileSync(filePath, { encoding: "utf8" }).trim().split("\n");
+    return fs
+      .readFileSync(filePath, { encoding: "utf8" })
+      .split("\n")
+      .filter((l) => l.trim() !== "");
   }
 }

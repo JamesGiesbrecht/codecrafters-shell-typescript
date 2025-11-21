@@ -38,7 +38,9 @@ class ReplHandler {
    */
   public setLine(line: string): void {
     this.line = line;
-    this.history.push(line);
+    if (line.length > 0) {
+      this.history.push(line);
+    }
     const parsedCommands = Parser.parseLine(this.line);
     if (parsedCommands.length === 0) return;
     this.parsedLine = parsedCommands[0];
@@ -253,6 +255,15 @@ class ReplHandler {
     );
     this.resetState();
     return [[], line];
+  }
+
+  // ==================== Private: Load History ====================
+
+  public initHistory() {
+    const { HISTFILE } = process.env;
+    if (HISTFILE) {
+      builtins.history(["-r", HISTFILE]);
+    }
   }
 }
 

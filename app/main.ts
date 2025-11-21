@@ -1,6 +1,7 @@
 import repl from "./handlers/ReplHandler";
 
 const replLoop = function () {
+  repl.initHistory();
   repl.rl.prompt();
 
   repl.rl.on("line", (command) => {
