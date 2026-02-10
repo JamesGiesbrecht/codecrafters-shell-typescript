@@ -3,7 +3,9 @@
   "description": "Build your own Shell challenge, from CodeCrafters",
   "type": "module",
   "scripts": {
-    "dev": "bun run app/main.ts"
+    "dev": "bun run app/main.ts",
+    "test:build": "cd codecrafters-tester && make build",
+    "challenge": "open -a 'Google Chrome' https://app.codecrafters.io/courses/shell/overview"
   },
   "devDependencies": {
     "@types/bun": "latest"
