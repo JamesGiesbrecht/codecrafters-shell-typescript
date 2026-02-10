@@ -92,7 +92,7 @@ Pull codecrafters `shell-tester` submodule:
 Build `shell-tester` binary
 
   ```sh
-  bun test:build
+  bun build:tester
   ```
 
 Install dependencies
